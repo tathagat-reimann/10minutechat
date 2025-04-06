@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -31,13 +32,23 @@ type Message struct {
 }
 
 var (
-	rooms       = make(map[string]*Room)
-	roomsMu     sync.Mutex
-	randomNames = []string{"Alice", "Bob", "Charlie", "Diana", "Eve", "Frank"}
+	rooms   = make(map[string]*Room)
+	roomsMu sync.Mutex
 )
 
 func getRandomName() string {
-	return randomNames[rand.Intn(len(randomNames))]
+	return conf.RandomNames[rand.Intn(len(conf.RandomNames))]
+}
+
+func getNewClientName(usedNames []string) string {
+	clientName := getRandomName() // Assign a random name to the client
+
+	if slices.Contains(usedNames, clientName) {
+		// If the name is already used, generate a new one
+		clientName = getNewClientName(usedNames)
+	}
+
+	return clientName
 }
 
 func CreateRoom(w http.ResponseWriter, r *http.Request) {
@@ -92,23 +103,17 @@ func JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientName := getRandomName() // Assign a random name to the client
-	// make sure the name is unique in the room
-	// BEWARE: if list of random names is smaller than allowed clients per roon,
-	// this can lead to infinite loop
-	for {
-		exists := false
-		for _, name := range room.Clients {
-			if name == clientName {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			break
-		}
-		clientName = getRandomName()
+	// Extract the list of used names from the room's Clients map
+	room.Mutex.Lock()
+	usedNames := make([]string, 0, len(room.Clients))
+	for _, name := range room.Clients {
+		usedNames = append(usedNames, name)
 	}
+	room.Mutex.Unlock()
+
+	// Assign a unique name to the client
+	clientName := getNewClientName(usedNames)
+
 	// Add the client to the room
 	room.Mutex.Lock()
 	room.Clients[conn] = clientName

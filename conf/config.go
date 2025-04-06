@@ -9,6 +9,7 @@ import (
 var (
 	AllowedHost     string
 	MaxRoomCapacity int
+	RandomNames     = []string{"Alice", "Bob", "Charlie", "Diana", "Eve", "Frank"}
 )
 
 func init() {
@@ -29,4 +30,9 @@ func init() {
 		}
 	}
 	log.Printf("MaxRoomCapacity: %d", MaxRoomCapacity)
+
+	// Ensure RandomNames length is sufficient
+	if len(RandomNames) < MaxRoomCapacity {
+		log.Fatalf("RandomNames length (%d) must be greater than or equal to MaxRoomCapacity (%d)", len(RandomNames), MaxRoomCapacity)
+	}
 }
