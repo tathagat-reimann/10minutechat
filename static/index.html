@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10 Minute Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Add Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center">10 Minute Chat</h1>
+
+    <hr>
+
+    <!-- Create Room Section -->
+    <div id="createRoomSection" class="mb-4">
+      <h3>Create a Room</h3>
+      <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
+    </div>
+
+    <div id="createRoomResult" class="mt-3 d-none">
+      <div>
+        <div class="alert alert-success">
+          Room created successfully (click to join)! Room ID: 
+          <strong><a id="roomLink" href="/room/{room_id}/join">{room_id}</a></strong>
+          <button id="copyRoomLinkBtn" class="btn btn-sm btn-secondary ms-2">
+            <i class="bi bi-clipboard"></i> <!-- Copy Icon -->
+          </button>
+        </div>
+      </div>
+      <div class="alert alert-info">
+        <strong>Note:</strong> You can share this Room ID (use the copy link button) with others to join the chat.
+      </div>
+      <div class="alert alert-warning">
+        <strong>Warning:</strong> The room will be deleted after 10 minutes of inactivity.
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Check if a room ID is already saved in localStorage
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedRoomId = localStorage.getItem("room_id");
+      if (savedRoomId) {
+        // Populate the room link and unhide the success message
+        const roomLink = document.getElementById("roomLink");
+        roomLink.href = `/room/${savedRoomId}/join`;
+        roomLink.textContent = savedRoomId;
+
+        document.getElementById("createRoomResult").classList.remove("d-none");
+        document.getElementById("createRoomSection").classList.add("d-none");
+      }
+    });
+
+    // Create Room
+    document.getElementById("createRoomBtn").addEventListener("click", async () => {
+      try {
+        const response = await fetch(`/api/room`, { method: "POST" });
+        if (!response.ok) throw new Error("Failed to create room");
+        const data = await response.json();
+
+        // Save the room ID to localStorage
+        localStorage.setItem("room_id", data.room_id);
+
+        // Replace placeholders in the link with the room_id
+        const roomLink = document.getElementById("roomLink");
+        roomLink.href = `/room/${data.room_id}/join`;
+        roomLink.textContent = data.room_id;
+
+        // Unhide success message
+        document.getElementById("createRoomResult").classList.remove("d-none");
+
+        // Hide the Create Room section
+        document.getElementById("createRoomSection").classList.add("d-none");
+
+        // Add event listener to the copy button
+        const copyButton = document.getElementById("copyRoomLinkBtn");
+        copyButton.addEventListener("click", () => {
+          navigator.clipboard.writeText(roomLink.href).then(() => {
+            alert("Room link copied to clipboard!");
+          }).catch(err => {
+            console.error("Failed to copy room link: ", err);
+          });
+        });
+      } catch (error) {
+        // Display error message
+        document.getElementById("createRoomResult").innerHTML = `
+          <div class="alert alert-danger">Error: ${error.message}</div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
