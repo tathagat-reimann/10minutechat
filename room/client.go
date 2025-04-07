@@ -3,28 +3,27 @@ package room
 import (
 	"encoding/json"
 	"log"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
 
-func handleMessages(room *Room) {
+func sendNewMessageToAllClients(room *Room) {
 	for {
 		message := <-room.Broadcast
 		room.Mutex.Lock()
-		for client, name := range room.Clients {
-			err := client.WriteJSON(message)
+		for clientWebSocketConnection, clientName := range room.Clients {
+			err := clientWebSocketConnection.WriteJSON(message)
 			if err != nil {
-				log.Printf("Error sending message to %s: %v", name, err)
-				client.Close()
-				delete(room.Clients, client)
+				log.Printf("Error sending message to %s: %v", clientName, err)
+				clientWebSocketConnection.Close()
+				delete(room.Clients, clientWebSocketConnection)
 			}
 		}
 		room.Mutex.Unlock()
 	}
 }
 
-func handleClientMessages(room *Room, conn *websocket.Conn, clientName string) {
+func handleNewMessageFromClient(room *Room, conn *websocket.Conn, clientName string) {
 	defer func() {
 		room.Mutex.Lock()
 		delete(room.Clients, conn)
@@ -47,21 +46,11 @@ func handleClientMessages(room *Room, conn *websocket.Conn, clientName string) {
 			continue
 		}
 
-		// Handle "getName" message type
-		if incomingMessage["type"] == "getName" {
-			response := map[string]string{
-				"type": "name",
-				"name": clientName,
-			}
-			conn.WriteJSON(response)
-			continue
-		}
-
 		// Handle regular chat messages
 		message := Message{
-			Timestamp: time.Now().Format("2006-01-02 15:04:05"),
-			Sender:    clientName,
-			Content:   incomingMessage["content"],
+			//Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+			Sender:  clientName,
+			Content: incomingMessage["content"],
 		}
 
 		room.Broadcast <- message

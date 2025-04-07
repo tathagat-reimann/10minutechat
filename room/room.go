@@ -26,9 +26,9 @@ type Room struct {
 }
 
 type Message struct {
-	Timestamp string `json:"timestamp"` // Timestamp of the message
-	Sender    string `json:"sender"`    // Name of the sender
-	Content   string `json:"content"`   // Message content
+	//Timestamp string `json:"timestamp"` // Timestamp of the message
+	Sender  string `json:"sender"`  // Name of the sender
+	Content string `json:"content"` // Message content
 }
 
 var (
@@ -61,11 +61,10 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 		ID:        roomID,
 		Clients:   make(map[*websocket.Conn]string),
 		Broadcast: make(chan Message),
-		// TODO: time using client timezone (then also need to save server time)
 		CreatedAt: time.Now().Format("2006-01-02 15:04:05"), // Format timestamp
 	}
 
-	go handleMessages(rooms[roomID])
+	go sendNewMessageToAllClients(rooms[roomID])
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -120,5 +119,5 @@ func JoinRoom(w http.ResponseWriter, r *http.Request) {
 	room.Mutex.Unlock()
 
 	log.Printf("Client %s joined room: %s", clientName, roomID)
-	go handleClientMessages(room, conn, clientName)
+	go handleNewMessageFromClient(room, conn, clientName)
 }

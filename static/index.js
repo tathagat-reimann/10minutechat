@@ -10,6 +10,16 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("createRoomResult").classList.remove("d-none");
     document.getElementById("createRoomSection").classList.add("d-none");
   }
+
+  // Add event listener to the copy button
+  const copyButton = document.getElementById("copyRoomLinkBtn");
+  copyButton.addEventListener("click", () => {
+    navigator.clipboard.writeText(roomLink.href).then(() => {
+      alert("Room link copied to clipboard!");
+    }).catch(err => {
+      console.error("Failed to copy room link: ", err);
+    });
+  });
 });
 
 // Create Room
@@ -32,16 +42,6 @@ document.getElementById("createRoomBtn").addEventListener("click", async () => {
 
     // Hide the Create Room section
     document.getElementById("createRoomSection").classList.add("d-none");
-
-    // Add event listener to the copy button
-    const copyButton = document.getElementById("copyRoomLinkBtn");
-    copyButton.addEventListener("click", () => {
-      navigator.clipboard.writeText(roomLink.href).then(() => {
-        alert("Room link copied to clipboard!");
-      }).catch(err => {
-        console.error("Failed to copy room link: ", err);
-      });
-    });
   } catch (error) {
     // Display error message
     document.getElementById("createRoomResult").innerHTML = `
