@@ -5,29 +5,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Room</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        .gradient-card {
+            background: linear-gradient(135deg, #75a9ec, #0465d4);
+            color: white;
+        }
+    </style>
 </head>
 
-<body>
+<body class="">
     <div class="container mt-5">
-        <h1 class="text-center">10 Minute Chat</h1>
+        <h1 class="text-center text-primary fw-bold mb-4">Private Chat</h1>
 
-        <div id="chat-container" class="d-none">
-            <div id="room-info-display" class="text-align mb-4">
-                <h4 id="room-id-display"></h4>
-                <p>Click here to copy the URL and share it with anyone to chat with them anonymously!</p>
-                <h4 id="client-name-display"></h4>
+        <!-- Chat Container -->
+        <div id="chat-container" class="d-none rounded shadow p-4 gradient-card">
+            <div id="room-info-container" class="text-start mb-4">
+                <h4 id="room-info-display" class="text-white fw-bold">
+                    Welcome to your private chat.
+                </h4>
+                <p class="text-light">
+                    <a id="chat-link" class="text-decoration-none text-white"></a>
+                    <button id="chat-link-copy-button" class="btn btn-sm btn-outline-light ms-2">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <span>Share this link to chat anonymously!</span>
+                </p>
+                <h5 id="client-name-display" class="text-white"></h5>
             </div>
-            <div id="chat-box" class="border p-3 mb-4" style="height: 300px; overflow-y: scroll;"></div>
+
+            <!-- Chat Box -->
+            <div id="chat-box" class="border rounded p-3 mb-4 text-dark" style="height: 300px; overflow-y: auto;">
+                <!-- Chat messages will appear here -->
+            </div>
+
+            <!-- Message Form -->
             <form id="message-form">
-                <div class="form-group">
-                    <input type="text" id="message" class="form-control" placeholder="Type your message" required>
+                <div class="input-group">
+                    <input type="text" id="message" class="form-control rounded-pill" placeholder="Type your message" required>
+                    <button type="submit" class="btn btn-primary rounded-pill ms-2">Send</button>
                 </div>
-                <button type="submit" class="btn btn-success btn-block">Send Message</button>
             </form>
         </div>
+
+        <!-- Error Message -->
+        <div id="chat-room-error-message" class="alert alert-danger d-none mt-4" role="alert">
+            Room not found. Please check the room ID and try again.
+            Or click <a href="/" class="alert-link">here</a> to create a new room.
+        </div>
     </div>
+
+    <!-- Toast Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">✅ Copied to clipboard!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="errorToastMessage">⚠️ Error</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="static/script.js?2"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

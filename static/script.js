@@ -1,10 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const roomCreation = document.getElementById('room-creation');
-    const roomForm = document.getElementById('room-form');
-    const roomIdInput = document.getElementById('room-id');
     const chatContainer = document.getElementById('chat-container');
     const chatBox = document.getElementById('chat-box');
-    const roomIdDisplay = document.getElementById('room-id-display');
+    const chatLink = document.getElementById('chat-link');
     const clientNameDisplay = document.getElementById('client-name-display');
     const messageInput = document.getElementById('message');
     const sendMessageButton = document.querySelector('#message-form button');
@@ -54,13 +51,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error('Room not found');
             }
             startListeningForMessages(roomId);
-            roomIdDisplay.textContent = `Room ID: ${roomId}`;
+            //roomInfoDisplay.textContent = `Room ID: ${roomId}`;
+            chatLink.href = `?roomId=${roomId}`;
             chatContainer.classList.remove("d-none");
         })
         .catch(error => {
             console.error('Error joining room:', error);
-            alert('Room not found. Please check the room ID and try again.');
-            window.location.href = '/';
+            // window.location.href = '/';
+            //showToast("Room not found. Please check the room ID and try again. " + error, "errorToast");
+            document.getElementById("chat-room-error-message").classList.remove("d-none");
         });
     }
 
@@ -103,5 +102,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateClientName(clientName) {
         clientNameDisplay.textContent = `You are: ${clientName}`;
+    }
+
+    document.getElementById("chat-link-copy-button").addEventListener("click", function() {
+        const link = document.getElementById("chat-link").href;
+
+        navigator.clipboard.writeText(link).then(() => {
+            showToast("Copied to clipboard!", "successToast");
+        }).catch(err => {
+            showToast("Failed to copy: " + err, "errorToast");
+        });
+    });
+
+    function showToast(message, toastId) {
+        const toastElement = document.getElementById(toastId);
+        toastElement.querySelector(".toast-body").textContent = message;
+        new bootstrap.Toast(toastElement).show();
+    }
+
+    window.onbeforeunload = function() {
+        return "Are you sure you want to leave? You will lose your chat history.";
     }
 });
