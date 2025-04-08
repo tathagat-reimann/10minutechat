@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">10 Minute Chat</h1>
+
+        <div id="chat-container" class="d-none">
+            <div id="room-info-display" class="text-align mb-4">
+                <h4 id="room-id-display"></h4>
+                <p>Click here to copy the URL and share it with anyone to chat with them anonymously!</p>
+                <h4 id="client-name-display"></h4>
+            </div>
+            <div id="chat-box" class="border p-3 mb-4" style="height: 300px; overflow-y: scroll;"></div>
+            <form id="message-form">
+                <div class="form-group">
+                    <input type="text" id="message" class="form-control" placeholder="Type your message" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Send Message</button>
+            </form>
+        </div>
+    </div>
+    <script src="static/script.js?2"></script>
+</body>
+
+</html>

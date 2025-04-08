@@ -1,7 +1,6 @@
 package room
 
 import (
-	"encoding/json"
 	"log"
 	"math/rand"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/tathagat/10minutechat/conf"
@@ -27,6 +27,7 @@ type Room struct {
 
 type Message struct {
 	//Timestamp string `json:"timestamp"` // Timestamp of the message
+	Type    string `json:"type"`    // Type of the message (e.g., "chat", "clientName", "info")
 	Sender  string `json:"sender"`  // Name of the sender
 	Content string `json:"content"` // Message content
 }
@@ -69,13 +70,31 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	response := map[string]string{"room_id": roomID}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Error encoding response: %v", err)
-		http.Error(w, "Failed to create room", http.StatusInternalServerError)
+
+	render.JSON(w, r, response)
+
+	log.Printf("Room created: %s at %s", roomID, rooms[roomID].CreatedAt)
+}
+
+func CheckRoom(w http.ResponseWriter, r *http.Request) {
+	roomID := chi.URLParam(r, "id")
+	log.Printf("Request to check room: %s", roomID)
+	roomsMu.Lock()
+	room, exists := rooms[roomID]
+	roomsMu.Unlock()
+
+	if !exists {
+		http.Error(w, "Room not found", http.StatusNotFound)
 		return
 	}
 
-	log.Printf("Room created: %s at %s", roomID, rooms[roomID].CreatedAt)
+	if len(room.Clients) >= conf.MaxRoomCapacity {
+		http.Error(w, "Room is full", http.StatusForbidden)
+		return
+	}
+
+	response := map[string]string{"room_id": roomID}
+	render.JSON(w, r, response)
 }
 
 func JoinRoom(w http.ResponseWriter, r *http.Request) {
@@ -119,5 +138,7 @@ func JoinRoom(w http.ResponseWriter, r *http.Request) {
 	room.Mutex.Unlock()
 
 	log.Printf("Client %s joined room: %s", clientName, roomID)
+	go sendClientNameToItself(room, conn, clientName)
+	go sendClientNameToOtherClients(room, conn, clientName)
 	go handleNewMessageFromClient(room, conn, clientName)
 }

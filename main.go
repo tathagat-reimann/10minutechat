@@ -15,6 +15,7 @@ func main() {
 	// use middlewares
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
 	router.SetupRouter(r)
 
 	log.Println("Server running on port 8080")

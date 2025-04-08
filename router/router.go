@@ -9,8 +9,9 @@ import (
 
 func SetupRouter(r *chi.Mux) {
 	r.Route("/api", func(r chi.Router) {
-		r.Post("/room", room.CreateRoom)
-		r.Get("/room/{id}/join", room.JoinRoom)
+		r.Post("/rooms", room.CreateRoom)
+		r.Get("/rooms/{id}", room.CheckRoom)
+		r.Get("/rooms/{id}/join", room.JoinRoom)
 	})
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
