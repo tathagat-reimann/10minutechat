@@ -91,6 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageInput.value = '';
             }
         });
+
+        window.onbeforeunload = function() {
+            return "Are you sure you want to leave? You will lose your chat history.";
+        }
     }
 
     function displayMessage(sender, message) {
@@ -118,9 +122,5 @@ document.addEventListener('DOMContentLoaded', function() {
         const toastElement = document.getElementById(toastId);
         toastElement.querySelector(".toast-body").textContent = message;
         new bootstrap.Toast(toastElement).show();
-    }
-
-    window.onbeforeunload = function() {
-        return "Are you sure you want to leave? You will lose your chat history.";
     }
 });
