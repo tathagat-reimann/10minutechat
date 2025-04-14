@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/tathagat/10minutechat/conf"
-	"github.com/tathagat/10minutechat/websocketX"
 )
 
 type Room struct {
@@ -33,8 +32,12 @@ type Message struct {
 }
 
 var (
-	rooms   = make(map[string]*Room)
-	roomsMu sync.Mutex
+	rooms    = make(map[string]*Room)
+	roomsMu  sync.Mutex
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
 )
 
 func getRandomName() string {
@@ -114,7 +117,8 @@ func JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := websocketX.Upgrader.Upgrade(w, r, nil)
+	// conn, err := websocketX.Upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Error upgrading WebSocket connection: %v", err)
 		http.Error(w, "Failed to establish WebSocket connection", http.StatusInternalServerError)

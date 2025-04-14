@@ -13,6 +13,10 @@ var (
 )
 
 func init() {
+	LoadConfig()
+}
+
+func LoadConfig() {
 	// Initialize AllowedHost
 	AllowedHost = os.Getenv("ALLOWED_HOST")
 	if AllowedHost == "" {
