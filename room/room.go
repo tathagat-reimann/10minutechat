@@ -3,14 +3,11 @@ package room
 import (
 	"log"
 	"math/rand"
-	"net/http"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/tathagat/10minutechat/conf"
@@ -32,12 +29,8 @@ type Message struct {
 }
 
 var (
-	rooms    = make(map[string]*Room)
-	roomsMu  sync.Mutex
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
+	rooms   = make(map[string]*Room)
+	roomsMu sync.Mutex
 )
 
 func getRandomName() string {
@@ -55,7 +48,7 @@ func getNewClientName(usedNames []string) string {
 	return clientName
 }
 
-func CreateRoom(w http.ResponseWriter, r *http.Request) {
+func CreateRoom() string {
 	roomID := uuid.New().String()
 	roomID = strings.ReplaceAll(roomID, "-", "") // Remove dashes from the roomID
 	roomsMu.Lock()
@@ -70,58 +63,34 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	go sendNewMessageToAllClients(rooms[roomID])
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	response := map[string]string{"room_id": roomID}
-
-	render.JSON(w, r, response)
-
 	log.Printf("Room created: %s at %s", roomID, rooms[roomID].CreatedAt)
+
+	return roomID
 }
 
-func CheckRoom(w http.ResponseWriter, r *http.Request) {
-	roomID := chi.URLParam(r, "id")
+func CheckRoom(roomID string) (bool, bool, *Room) {
 	log.Printf("Request to check room: %s", roomID)
 	roomsMu.Lock()
 	room, exists := rooms[roomID]
 	roomsMu.Unlock()
+	full := false
 
-	if !exists {
-		http.Error(w, "Room not found", http.StatusNotFound)
-		return
+	if exists {
+		if len(room.Clients) >= conf.MaxRoomCapacity {
+			full = true
+		}
 	}
 
-	if len(room.Clients) >= conf.MaxRoomCapacity {
-		http.Error(w, "Room is full", http.StatusForbidden)
-		return
-	}
-
-	response := map[string]string{"room_id": roomID}
-	render.JSON(w, r, response)
+	return exists, full, room
 }
 
-func JoinRoom(w http.ResponseWriter, r *http.Request) {
-	roomID := chi.URLParam(r, "id")
+func JoinRoom(roomID string, conn *websocket.Conn) {
 	log.Printf("Request to join room: %s", roomID)
-	roomsMu.Lock()
-	room, exists := rooms[roomID]
-	roomsMu.Unlock()
+	exists, full, room := CheckRoom(roomID)
 
-	if !exists {
-		http.Error(w, "Room not found", http.StatusNotFound)
-		return
-	}
-
-	if len(room.Clients) >= conf.MaxRoomCapacity {
-		http.Error(w, "Room is full", http.StatusForbidden)
-		return
-	}
-
-	// conn, err := websocketX.Upgrader.Upgrade(w, r, nil)
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Printf("Error upgrading WebSocket connection: %v", err)
-		http.Error(w, "Failed to establish WebSocket connection", http.StatusInternalServerError)
+	if !exists || full {
+		// return error
+		log.Printf("Room not found or full: %s", roomID)
 		return
 	}
 

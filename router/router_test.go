@@ -69,6 +69,28 @@ func TestSetupRouter(t *testing.T) {
 		assert.NotNil(t, ws, "WebSocket connection should not be nil")
 	})
 
+	t.Run("TestJoinRoomFail", func(t *testing.T) {
+		// Create a room first to ensure it exists
+		roomID := "fakeRoomId"
+		t.Logf("Room ID: %s", roomID)
+
+		// Create a test server using the router
+		server := httptest.NewServer(r)
+		defer server.Close()
+
+		// Convert the test server URL to a WebSocket URL
+		wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/api/rooms/" + roomID + "/join"
+		t.Logf("WebSocket URL: %s", wsURL)
+
+		// Connect to the WebSocket server
+		ws, response, err := websocket.DefaultDialer.Dial(wsURL, nil)
+
+		// Verify the WebSocket connection
+		assert.NotNil(t, err, "Expected error when connecting to WebSocket with invalid room ID")
+		assert.Nil(t, ws, "WebSocket connection should be nil")
+		assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected 500")
+	})
+
 	t.Run("TestServeIndex", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
